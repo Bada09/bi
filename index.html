@@ -10,7 +10,6 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script src="relatorio_vendas_geral.js"></script>
-<script src="../vendtef_local.js"></script>
 <style>
 /* ── Reset & Tokens ─────────────────────────────── */
 :root{
@@ -1196,6 +1195,9 @@ function exportCSV(){
 // ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
+let refreshTimer = null;
+let refreshInProgress = false;
+
 function initFlatpickr() {
   const commonCfg = {
     dateFormat: "d/m/Y",
@@ -1209,12 +1211,21 @@ function initFlatpickr() {
   fpEnd = flatpickr("#date-end", commonCfg);
 }
 
+function startAutoRefresh() {
+  if (refreshTimer) return;
+  refreshTimer = setInterval(() => {
+    if (document.visibilityState === 'visible' && !refreshInProgress) {
+      loadData();
+    }
+  }, 15*60*1000);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initFlatpickr();
-  // Carregar dados diretamente, sem autenticação
   document.getElementById('loader').classList.remove('hidden');
-  loadData();
-  setInterval(loadData, 15*60*1000);
+  refreshInProgress = true;
+  loadData().finally(() => { refreshInProgress = false; });
+  startAutoRefresh();
 });
 </script>
 </body>
